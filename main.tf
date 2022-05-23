@@ -41,11 +41,11 @@ resource "aws_instance" "ansible_controller" {
   subnet_id                   = "subnet-b0a335fc"
   vpc_security_group_ids      = [aws_security_group.estio-ec2-sg.id]
   associate_public_ip_address = true
-  user_data                   = file("./ansible_install.sh")
+  user_data                   = file("scripts/ansible_install.sh")
   #user_data                   = file("./apache.sh")
 
   tags = {
-    Name = "estio"
+    Name = "ansible_controller"
   }
 }
 
@@ -56,10 +56,11 @@ resource "aws_instance" "ansible_host" {
   subnet_id                   = "subnet-b0a335fc"
   vpc_security_group_ids      = [aws_security_group.estio-ec2-sg.id]
   associate_public_ip_address = true
+  user_data                   = file("scripts/host_setup.sh")
   #user_data                   = file("./flask.sh")
 
   tags = {
-    Name = "estio"
+    Name = "ansible_host"
   }
 }
 
