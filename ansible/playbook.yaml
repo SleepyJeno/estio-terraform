@@ -1,0 +1,29 @@
+- hosts: target
+  become: yes
+  tasks:
+    - name: update apps
+      command: apt update
+    - name: install apache
+      command: apt install apache2 -y
+    - name: copy apache script
+      ansible.builtin.copy:
+        src: /home/ubuntu/apache.sh
+        dest: /home/ubuntu/apache.sh
+        owner: ubuntu
+        mode: u+x,g+x,o+x
+    - name: remove windows carriages
+      command: sed -i -e 's/\r$//' /home/ubuntu/apache.sh
+    - name: run apache script
+      command: sh /home/ubuntu/apache.sh
+    - name: copy flask script
+      ansible.builtin.copy:
+        src: /home/ubuntu/flask.sh
+        dest: /home/ubuntu/flask.sh
+        owner: ubuntu
+        mode: u+x,g+x,o+x
+    - name: remove windows carriages
+      command: sed -i -e 's/\r$//' /home/ubuntu/flask.sh
+    - name: run flask script on port 5000 detached
+      command: sh /home/ubuntu/flask.sh
+      async: 2592000
+      poll: 0
