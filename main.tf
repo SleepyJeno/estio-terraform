@@ -1,7 +1,11 @@
-resource "aws_security_group" "estio-ec2-sg" {
-  name        = "estio-ec2-sg"
+##############################
+# security groups setup
+##############################
+
+resource "aws_security_group" "estio_ec2_sg" {
+  name        = "estio_ec2_sg"
   description = "Allow http and https traffic"
-  vpc_id      = "vpc-3da39155"
+  vpc_id      = var.vpc_id
 
   ingress {
     description = "httpx from VPC"
@@ -35,16 +39,16 @@ resource "aws_security_group" "estio-ec2-sg" {
   }
 }
 
-resource "aws_security_group" "db_sg_from_vpc" {
+resource "aws_security_group" "estio_db_sg_from_ec2_sg" {
   name        = "estio-db-sg"
   description = "Allow 3306"
-  vpc_id      = "vpc-3da39155"
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.estio-ec2-sg]
+    security_groups = [aws_security_group.estio_ec2_sg.id]
   }
 
   egress {
@@ -55,37 +59,77 @@ resource "aws_security_group" "db_sg_from_vpc" {
   }
 }
 
+##############################
+# subnets setup
+##############################
+
+resource "aws_subnet" "estio_public_1" {
+  vpc_id                  = var.vpc_id
+  cidr_block              = "10.0.11.0/24"
+  map_public_ip_on_launch = true
+}
+resource "aws_subnet" "estio_private_1" {
+  vpc_id            = var.vpc_id
+  cidr_block        = "10.0.12.0/24"
+  availability_zone = "eu-west-2a"
+}
+
+resource "aws_subnet" "estio_private_2" {
+  vpc_id            = var.vpc_id
+  cidr_block        = "10.0.13.0/24"
+  availability_zone = "eu-west-2b"
+}
+
+resource "aws_db_subnet_group" "db_subnet_group" {
+  name       = "estio-database"
+  subnet_ids = [aws_subnet.estio_private_1.id, aws_subnet.estio_private_2.id]
+}
+
+##############################
+# Instance setup
+##############################
+
 resource "aws_instance" "ansible_controller" {
-  ami                         = "ami-0015a39e4b7c0966f"
-  instance_type               = "t2.micro"
-  key_name                    = "Linux-Day-3"
-  subnet_id                   = "subnet-b0a335fc"
-  vpc_security_group_ids      = [aws_security_group.estio-ec2-sg.id]
+  ami           = "ami-0015a39e4b7c0966f"
+  instance_type = "t2.micro"
+  key_name      = "Linux-Day-3"
+  subnet_id     = aws_subnet.estio_public_1.id
+  #subnet_id                   = "subnet-b0a335fc"
+  vpc_security_group_ids      = [aws_security_group.estio_ec2_sg.id]
   associate_public_ip_address = true
   # user_data                   = file("scripts/ansible_install.sh") #uncomment for ansible setup
-  #user_data                   = file("./apache.sh") #uncomment for apache server 
+  user_data                   = file("scripts/apache.sh") #uncomment for apache server 
 
   tags = {
     Name = "ansible_controller"
   }
 }
 
-resource "aws_instance" "ansible_host" {
-  ami                         = "ami-0015a39e4b7c0966f"
-  instance_type               = "t2.micro"
-  key_name                    = "Linux-Day-3"
-  subnet_id                   = "subnet-b0a335fc"
-  vpc_security_group_ids      = [aws_security_group.estio-ec2-sg.id]
-  associate_public_ip_address = true
-  # user_data                   = file("./flask.sh") #flask app setup
-  # user_data                   = file("scripts/host_setup.sh") #ansible setup
+# resource "aws_instance" "ansible_host" {
+#   ami           = "ami-0015a39e4b7c0966f"
+#   instance_type = "t2.micro"
+#   key_name      = "Linux-Day-3"
+#   subnet_id     = aws_subnet.estio_public_1.id
+#   #subnet_id                   = "subnet-b0a335fc"
+#   vpc_security_group_ids      = [aws_security_group.estio_ec2_sg.id]
+#   associate_public_ip_address = true
+#   # user_data                   = file("./flask.sh") #flask app setup
+#   # user_data                   = file("scripts/host_setup.sh") #ansible setup
 
 
-  tags = {
-    Name = "ansible_host"
-  }
+#   tags = {
+#     Name = "ansible_host"
+#   }
+# }
+
+##############################
+# Output
+##############################
+
+output "ansible_controller_ip" {
+  value = try(aws_instance.ansible_controller.public_ip, null)
 }
 
-output "my_ips" {
-  value = [aws_instance.ansible_controller.public_ip, aws_instance.ansible_host.public_ip]
-}
+# output "ansible_host_ip" {
+#   value = try(aws_instance.ansible_host.public_ip, null)
+# }
