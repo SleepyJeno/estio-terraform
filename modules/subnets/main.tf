@@ -52,6 +52,13 @@ resource "aws_route_table" "estio_public_rt" {
   }
 }
 
+resource "aws_route" "igw_public_route" {
+  route_table_id         = aws_route_table.estio_public_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = var.igw_id
+
+}
+
 resource "aws_route_table_association" "estio_private_1" {
   subnet_id      = aws_subnet.estio_private_1.id
   route_table_id = aws_route_table.estio_private_rt.id

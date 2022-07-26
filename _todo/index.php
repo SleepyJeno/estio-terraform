@@ -42,4 +42,10 @@ sudo echo "ENDPOINT=${var.endpoint}" >> /etc/environment
 git clone https://github.com/nathanforester/FlaskMovieDB2.git
 sudo apt install mysql-server -y
 . /home/ubuntu/FlaskMovieDB2/startup.sh
+mysql -h $ENDPOINT -P $PORT -u master -pfoobarbaz
+use estio_db
+CREATE TABLE people(id SERIAL, FirstName varchar(55),LastName varchar(55));
+INSERT INTO people(FirstName, LastName) VALUES ('Jack', 'Babber');
+INSERT INTO people(FirstName, LastName) VALUES ('Jack', 'Babber');
+INSERT INTO people(FirstName, LastName) VALUES ('Tester', 'Test');
 EOL

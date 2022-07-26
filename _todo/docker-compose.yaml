@@ -1,0 +1,8 @@
+#docker compose file for nathan's flask app
+version: "2"
+services:
+  web:
+    image: prime_age:latest
+    ports:
+      - "5000:5000"
+

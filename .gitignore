@@ -1,7 +1,7 @@
 terraform.tfvars
 *.backup
 *.lock.*
-*.tfstate
+*.tfstate*
 *.json
 .terraform/*
 .terraform\*
@@ -15,3 +15,5 @@ scripts
 _local_scripts/
 _local_scripts\
 _local_scripts
+.terraform.*
+*.tfstate.*
