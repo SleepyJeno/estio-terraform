@@ -7,6 +7,9 @@ resource "aws_vpc" "estio_vpc" {
   tags = {
     Name = "estio-vpc"
   }
+  lifecycle {
+   prevent_destroy = true
+ }
 }
 
 resource "aws_internet_gateway" "estio_igw" {
@@ -15,6 +18,9 @@ resource "aws_internet_gateway" "estio_igw" {
   tags = {
     Name = "estio-igw"
   }
+  lifecycle {
+   prevent_destroy = true
+ }
 }
 
 module "subnets" {
@@ -38,11 +44,11 @@ module "instances" {
   ec2_user_data         = <<-EOL
 #!/bin/bash 
 sudo apt update
-sudo 
-sudo echo "USERNAME=${module.instances.rds_username} | cut -d: -f1" >> /etc/environment
-sudo echo "PASSWORD=${module.instances.rds_password}" >> /etc/environment
-sudo echo "NAME=${module.instances.db_name}" >> /etc/environment
-sudo echo "ENDPOINT=${module.instances.rds_endpoint}" >> /etc/environment
+sudo echo "USERNAME=${module.instances.rds_username}" >> /home/ubuntu/.bashrc
+sudo echo "PASSWORD=${module.instances.rds_password}" >> /home/ubuntu/.bashrc
+sudo echo "DBNAME=${module.instances.db_name}" >> /home/ubuntu/.bashrc
+sudo echo ENDPOINT=${module.instances.rds_endpoint} | cut -d: -f1 >> /home/ubuntu/.bashrc
+source ~/.bashrc
 git clone https://github.com/nathanforester/FlaskMovieDB2.git
 sudo apt install mysql-server -y
 sudo apt install docker.io -y
@@ -50,11 +56,11 @@ sudo curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-
 sudo chmod +x /usr/local/bin/docker-compose
 sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 . /home/ubuntu/FlaskMovieDB2/startup.sh
-mysql -h $ENDPOINT -P 3306 -u $USERNAME -p$PASSWORD
-use estio_db
-CREATE TABLE people(id SERIAL, FirstName varchar(55),LastName varchar(55));
-INSERT INTO people(FirstName, LastName) VALUES ('Jack', 'Babber');
-INSERT INTO people(FirstName, LastName) VALUES ('Jack', 'Babber');
-INSERT INTO people(FirstName, LastName) VALUES ('Tester', 'Test');
+touch /home/ubuntu/mysql_script
+echo "CREATE TABLE people(id SERIAL, FirstName varchar(55),LastName varchar(55));" >> /home/ubuntu/mysql_script
+echo "INSERT INTO people(FirstName, LastName) VALUES ('Jack', 'Babber');" >> /home/ubuntu/mysql_script
+echo "INSERT INTO people(FirstName, LastName) VALUES ('John', 'Ginger');" >> /home/ubuntu/mysql_script
+echo "INSERT INTO people(FirstName, LastName) VALUES ('Tester', 'Test');" >> /home/ubuntu/mysql_script
+mysql -h $ENDPOINT -P 3306 -u $USERNAME -p$PASSWORD $DBNAME < /home/ubuntu/mysql_script
 EOL
 }
