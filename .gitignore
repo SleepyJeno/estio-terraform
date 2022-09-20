@@ -17,3 +17,5 @@ _local_scripts\
 _local_scripts
 .terraform.*
 *.tfstate.*
+*.pem
+*.hcl

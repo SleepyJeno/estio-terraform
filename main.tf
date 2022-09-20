@@ -7,9 +7,6 @@ resource "aws_vpc" "estio_vpc" {
   tags = {
     Name = "estio-vpc"
   }
-  lifecycle {
-   prevent_destroy = true
- }
 }
 
 resource "aws_internet_gateway" "estio_igw" {
@@ -18,9 +15,6 @@ resource "aws_internet_gateway" "estio_igw" {
   tags = {
     Name = "estio-igw"
   }
-  lifecycle {
-   prevent_destroy = true
- }
 }
 
 module "subnets" {
@@ -49,7 +43,7 @@ sudo echo "PASSWORD=${module.instances.rds_password}" >> /home/ubuntu/.bashrc
 sudo echo "DBNAME=${module.instances.db_name}" >> /home/ubuntu/.bashrc
 sudo echo ENDPOINT=${module.instances.rds_endpoint} | cut -d: -f1 >> /home/ubuntu/.bashrc
 source ~/.bashrc
-git clone https://github.com/nathanforester/FlaskMovieDB2.git
+sudo git clone https://github.com/nathanforester/FlaskMovieDB2.git
 sudo apt install mysql-server -y
 sudo apt install docker.io -y
 sudo curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -63,4 +57,13 @@ echo "INSERT INTO people(FirstName, LastName) VALUES ('John', 'Ginger');" >> /ho
 echo "INSERT INTO people(FirstName, LastName) VALUES ('Tester', 'Test');" >> /home/ubuntu/mysql_script
 mysql -h $ENDPOINT -P 3306 -u $USERNAME -p$PASSWORD $DBNAME < /home/ubuntu/mysql_script
 EOL
+}
+
+module "flask_db_app_instances" {
+  source                = "./modules/flask_db_app_instances"
+  vpc_id                = aws_vpc.estio_vpc.id
+  ec2_controller_subnet = module.subnets.estio_public_1_subnet_id
+  db_subnet_group       = module.subnets.db_subnet_group
+  db_security_groups    = [module.security_groups.estio_db_sg_from_ec2_sg_id]
+  ec2_security_groups   = [module.security_groups.estio_ec2_sg_id]
 }
