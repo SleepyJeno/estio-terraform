@@ -4,6 +4,7 @@ The key infrastructure is split up into 3 main modules:
 * `security groups` for ACL setup
 * `subnets` for main networking setup
 * `instances` for EC2 and RDS DB instance setup
+* `flask_db_app_instances` for alternative way of setting up the instances (EC2 and RDS) using `null_resource`
 
 The said modules are then called from the root folder's `main.tf`
 
