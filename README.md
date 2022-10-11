@@ -8,6 +8,9 @@ The key infrastructure is split up into 3 main modules:
 
 The said modules are then called from the root folder's `main.tf`
 
+## Example of a running app
+[![Screenshot of a running app](https://github.com/SleepyJeno/estio-terraform/blob/master/_todo/example.png?raw=true)]
+
 ## What's inside
 The provisioned infrastructure will provide you with the following resources:
 ```
